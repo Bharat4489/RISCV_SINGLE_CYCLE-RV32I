@@ -1,0 +1,77 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 26.04.2025 21:52:04
+// Design Name: 
+// Module Name: top_RISC_SC
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+//SC_SINGLE_CYCLE
+module top_RISC_SC(
+    input logic clk,
+    input logic reset,
+    output logic [31:0] pc_out,
+    output logic [31:0] ALUResult,
+    output logic zero,
+    output logic [1:0] ImmSel,
+    output logic RegWrite,
+    output logic MemWrite,
+    output logic MemRead,
+    output logic ALUSrc,
+    output logic MemtoReg,
+    output logic PCSrc,
+    output logic [3:0] ALUControl,
+    output logic [31:0] instruction
+);
+
+    // Internal wires to connect control and datapath
+
+    
+
+    // Instantiate Datapath
+    Datapath datapath_inst (
+        .clk(clk),
+        .reset(reset),
+        .ImmSel(ImmSel),
+        .RegWrite(RegWrite),
+        .MemWrite(MemWrite),
+        .MemRead(MemRead),
+        .ALUSrc(ALUSrc),
+        .MemtoReg(MemtoReg),
+        .PCSrc(PCSrc),
+        .ALUControl(ALUControl),
+        .pc_out(pc_out),
+        .ALUResult(ALUResult),
+        .zero(zero),
+        .instruction(instruction)
+    );
+
+
+    // Instantiate Control Unit
+    ControlUnit control_unit_inst (
+        .instruction(instruction),
+        .zero(zero),
+        .Regwrite(RegWrite),
+        .ImmSel(ImmSel),
+        .ALUSrc(ALUSrc),
+        .ALUControl(ALUControl),
+        .PCSrc(PCSrc),
+        .Memwrite(MemWrite),
+        .Memread(MemRead),
+        .Mem2reg(MemtoReg)
+    );
+
+endmodule
