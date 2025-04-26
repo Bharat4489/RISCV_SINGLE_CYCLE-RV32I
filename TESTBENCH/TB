@@ -1,0 +1,74 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 26.04.2025 22:08:03
+// Design Name: 
+// Module Name: TB_top_RISC_SC
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module TB_top_RISC_SC;
+
+    logic clk;
+    logic reset;
+    logic [31:0] pc_out;
+    logic [31:0] ALUResult;
+    logic zero;
+    logic [1:0] ImmSel;
+    logic RegWrite, MemWrite, MemRead, ALUSrc, MemtoReg, PCSrc;
+    logic [3:0] ALUControl;
+    logic [31:0] instruction;
+
+    // Instantiate Top module
+    top_RISC_SC dut (
+        .clk(clk),
+        .reset(reset),
+        .pc_out(pc_out),
+        .ALUResult(ALUResult),
+        .zero(zero),
+        .ImmSel(ImmSel),
+        .RegWrite(RegWrite),
+        .MemWrite(MemWrite),
+        .MemRead(MemRead),
+        .ALUSrc(ALUSrc),
+        .MemtoReg(MemtoReg),
+        .PCSrc(PCSrc),
+        .ALUControl(ALUControl),
+        .instruction(instruction)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;
+    end
+
+    // Reset
+    initial begin
+        reset = 0;
+        #10;
+        reset = 1;
+    end
+
+
+    // Simulation end
+    initial begin
+        #500;
+        $finish;
+    end
+
+endmodule
+
