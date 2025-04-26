@@ -1,0 +1,139 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 25.04.2025 22:32:18
+// Design Name: 
+// Module Name: ControlUnit
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module ControlUnit(
+    //output logic ALUOp, ALUControl unit is taking ALUOp directly
+    input  logic [31:0] instruction, // full instruction
+    input  logic        zero,         // ALU zero flag
+    output logic Regwrite,         // Register write signal
+    output logic [1:0]ImmSel,           // Immediate Select signal
+    output logic ALUSrc,           // ALU Source signal
+    output logic [3:0] ALUControl, // 4-bit ALU Control signal
+    output logic PCSrc,            // PC Source signal
+    output logic Memwrite,         // Memory Write signal
+    output logic Memread,          // Memory Read signal
+    output logic Mem2reg           // Memory to Register signal
+    );                           
+ //COMMENTS ARE AFTER THE LOGIC \/  
+    
+
+    // Internal signals
+    logic [2:0] opcode_high; // instruction[6:4]
+    logic [2:0] funct3;       // instruction[14:12]
+    logic       funct7_30;    // instruction[30]
+    logic [1:0] ALUOp;        // from ALUOp module
+    logic       branch;       // for PCSrc calculation
+
+    // Extract fields directly
+    assign opcode_high = instruction[6:4];
+    assign funct3      = instruction[14:12];
+    assign funct7_30   = instruction[30];
+
+    // Instantiate ALUOp module
+    ALUOp aluop_inst(
+        .opcode(opcode_high),
+        .ALUOp(ALUOp)
+    );
+
+    // Instantiate ALUControl module
+    ALUControl alucontrol_inst(
+        .ALUOp(ALUOp),
+        .funct3(funct3),
+        .funct7_30(funct7_30),
+        .ALUControl(ALUControl)
+    );
+
+    // Main Control logic
+    always_comb begin
+        case (instruction[6:0])
+            7'b0000011: begin // Load
+                Regwrite = 1;
+                ALUSrc   = 1;
+                Mem2reg  = 1;
+                Memread  = 1;
+                Memwrite = 0;
+                ImmSel   = 2'b00;
+                branch   = 0;
+            end
+            7'b0100011: begin // Store
+                Regwrite = 0;
+                ALUSrc   = 1;
+                Mem2reg  = 0;
+                Memread  = 0;
+                Memwrite = 1;
+                ImmSel   = 2'b01;
+                branch   = 0;
+            end
+            7'b1100011: begin // Branch
+                Regwrite = 0;
+                ALUSrc   = 0;
+                Mem2reg  = 0;
+                Memread  = 0;
+                Memwrite = 0;
+                ImmSel   = 2'b10;
+                branch   = 1;
+            end
+            default: begin // R-type and others
+                Regwrite = 1;
+                ALUSrc   = 0;
+                Mem2reg  = 0;
+                Memread  = 0;
+                Memwrite = 0;
+                ImmSel   = 2'b00;
+                branch   = 0;
+            end
+        endcase
+    end
+
+    // PCSrc logic
+    assign PCSrc = branch & zero;
+
+//==================================================================================================================
+// Control Signal Table
+//------------------------------------------------------------------------------------------------------------------
+// Signal     | Deasserted Effect                          | Asserted Effect
+//------------|---------------------------------------------|--------------------------------------------------------
+// RegWrite   | No register is written                      | Write register is updated with Write Data
+// ALUSrc     | ALU SrcB comes from Register (Read data 2)  | ALU SrcB comes from Immediate
+// PCSrc      | PC = PC + 4                                 | PC = Branch Target (PC-relative)
+// MemRead    | -                                            | Load data from memory into Read Data
+// MemWrite   | -                                            | Store data to memory using Write Data input
+// MemtoReg   | Register gets ALU result                    | Register gets Data Memory output
+//==================================================================================================================
+//==================================================================================================================
+// ALUControl Signal Table
+//------------------------------------------------------------------------------------------------------------------
+// ALUControl | Operation Performed             | Instruction Fields
+//------------|----------------------------------|-------------------------------
+// 4'b0000    | AND                             | funct3 = 111
+// 4'b0001    | OR                              | funct3 = 110
+// 4'b0010    | ADD                             | funct3 = 000, funct7[30] = 0
+// 4'b0110    | SUB                             | funct3 = 000, funct7[30] = 1
+// 4'b1100    | XOR                             | funct3 = 100
+// 4'b0100    | SLT (Signed Less Than)          | funct3 = 010
+// 4'b0111    | SLTU (Unsigned Less Than)       | funct3 = 011
+// 4'b1111    | Undefined / Default             | Invalid or unhandled case
+//==================================================================================================================
+  
+    
+    
+endmodule
